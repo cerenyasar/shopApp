@@ -28,19 +28,14 @@ def change_quantity():
     try:
         _quantity = int(request.form['quantity'])
         _code = request.form['code']
-        print(_quantity)
-        print(_code)
 
 
         if _quantity and _code and request.method == 'POST':
-            print("here")
             all_total_price = 0
             all_total_quantity = 0
             session.modified = True
             for item in session['cart_item'].items():
-                print("inside for ")
                 if item[0] ==_code:
-                    print("find item")
                     individual_quantity = session['cart_item'][_code]['quantity']
                     session['cart_item'][_code]['quantity']= _quantity
                     session['cart_item'][_code]['total_price'] = _quantity * session['cart_item'][_code]['price']
@@ -51,7 +46,7 @@ def change_quantity():
                     session['all_total_quantity'] = all_total_quantity
                     session['all_total_price'] = all_total_price
                     break
-            print("redirecting")
+
             return redirect(request.referrer)
         else:
             return 'Error while updating the quantity of item in cart'
@@ -72,7 +67,6 @@ def checkout():
 @app.route('/save',methods=['POST','GET'])
 def save_checkout():
     try:
-        print("it's here")
         _fname = request.form['firstname']
         _lname = request.form['lastname']
         _email = request.form['email']
@@ -80,8 +74,7 @@ def save_checkout():
         _city = request.form['city']
         _country = request.form['country']
         _zip = request.form['zip']
-        print(_fname)
-        print("it came here")
+
         if _fname and _lname and _email and _address and _country and _city and request.method == 'POST':
             conn = mysql.connect()
             cursor = conn.cursor(pymysql.cursors.DictCursor)
@@ -90,9 +83,7 @@ def save_checkout():
             cursor.execute(sqlQuery)
 
             row = cursor.fetchone()
-            print(row)
             if row == None:
-                print("empty")
                 # Insert Customer into Database
                 if _zip == "":
                     sqlInsert = "INSERT INTO customers(fname,lname,email,address,city,country) VALUES('"+_fname+"','"+ _lname +"','"+_email+"','"+_address+"','"+_city +"','"+_country +"');"
@@ -101,20 +92,14 @@ def save_checkout():
                 cursor.execute(sqlInsert)
                 cursor.execute(sqlQuery)
                 row = cursor.fetchone()
-                print(row)
             today = date.today()
-            print("adding order")
             sqlInsert = "INSERT INTO nFNkHt1vzc.Order(customer_id,order_date,shipping_price) VALUES(" +str(row['id'])+",'"+str(today)+"',7.0);"
             cursor.execute(sqlInsert)
 
-            print("find order id")
             sqlQuery ="SELECT id FROM nFNkHt1vzc.Order WHERE customer_id=" + str(row['id']) + " AND order_date='" +str(today )+"';"
             cursor.execute(sqlQuery)
             orderId = cursor.fetchone()
-            print(orderId)
-            print("add order items")
             for key, value in session['cart_item'].items():
-                print(key)
                 sqlInsert ="INSERT INTO nFNkHt1vzc.OrderItem(Order_ID,Product_ID,Quantity)  VALUES(" +str(orderId['id']) +","+str(session['cart_item'][key]['pid'])+","+str(session['cart_item'][key]['quantity'])+");"
                 cursor.execute(sqlInsert)
 
@@ -124,7 +109,6 @@ def save_checkout():
             conn.close()
             return render_template('cart.html', response="Your order has been received.")
         else:
-            print("empty")
             flash('You must fill in all the required(*) fields.')
             return redirect(url_for('.checkout'))
 
@@ -148,7 +132,6 @@ def add_product_to_cart():
             itemArray = {
                 row['code']: {'name': row['name'], 'code': row['code'],  'pid': row['pid'], 'quantity': _quantity, 'price': row['price'],
                               'image': row['image'], 'total_price': _quantity * row['price'], 'total_price_dollar': round(_quantity * row['price'] * 1.13,2)}}
-            print(itemArray)
 
             all_total_price = 0
             all_total_quantity = 0
@@ -187,6 +170,8 @@ def add_product_to_cart():
     finally:
         cursor.close()
         conn.close()
+
+
 @app.route("/")
 def products():
     try:
@@ -202,8 +187,6 @@ def products():
         conn.close()
 
 
-
-###????
 @app.route('/empty')
 def empty_cart():
     try:
