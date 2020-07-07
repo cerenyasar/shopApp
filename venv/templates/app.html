@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>Pizza Order App</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+      <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+   </head>
+   <body>
+      <div id="row">
+         <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <nav class="navbar navbar-light bg-light">
+               <a class="navbar-brand" href="/">
+               <img src="/static/images/brand.png" width="30" height="30" class="d-inline-block align-top" alt="">
+               Pizza Take
+               </a>
+            </nav>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+               <ul class="navbar-nav mr-auto">
+                  <li class="nav-item active">
+                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                  </li>
+                  <li class="nav-item">
+                     <a class="nav-link" href="#">Sign In</a>
+                  </li>
+               </ul>
+               <div class="dropdown">
+                  <form method="post" action="/cart">
+                     {% if 'cart_item' in session %}
+                     <button type="button" class="btn btn-info" data-toggle="dropdown">
+                     <i class="fa fa-shopping-cart" aria-hidden="true"></i> Cart <span id ="btn-qua"class="badge badge-pill badge-danger">{{ session['all_total_quantity'] }}</span>
+                     </button>
+                     <div class="dropdown-menu">
+                        <div id="begin" class="row total-header-section">
+                           <div class="col-lg-6 col-sm-6 col-6">
+                              <i class="fa fa-shopping-cart" aria-hidden="true"></i> <span id="drop-qua" class="badge badge-pill badge-danger">{{ session['all_total_quantity'] }}</span>
+                           </div>
+                           <div class="col-lg-6 col-sm-6 col-6 total-section text-right">
+                              <p>Total: <span id="totalPrice" class="text-info">{{ session['all_total_price'] }} €</span></p>
+                           </div>
+                        </div>
+                        <div id="CartRows">
+                           {% for key, val in session['cart_item'].items() %}
+                           {% set quantity = session['cart_item'][key]['quantity'] %}
+                           {% set price = session['cart_item'][key]['price'] %}
+                           {% set item_price = session['cart_item'][key]['total_price'] %}
+                           <div class="row cart-detail">
+                              <div class="col-lg-4 col-sm-4 col-4 cart-detail-img">
+                                 <img src="/static/images/product-images/{{ session['cart_item'][key]['image'] }}">
+                              </div>
+                              <div class="col-lg-8 col-sm-8 col-8 cart-detail-product">
+                                 <input name="quantity" type="hidden" id="pid{{ session['cart_item'][key]['pid'] }}" value="{{ quantity }}"/>
+                                 <input name="pid" type="hidden" value="{{ session['cart_item'][key]['pid']}}"/>
+                                 <p>{{ session['cart_item'][key]['name'] }}</p>
+                                 <span id="pidPr{{ session['cart_item'][key]['pid'] }}" class="price text-info"> {{ price }} €</span> <span id="pidT{{ session['cart_item'][key]['pid'] }}" class="count"> Quantity: {{ quantity }}</span>
+                                 <a href="{{ url_for('.delete_product', code=session['cart_item'][key]['code']) }}" class="btn btn-danger">
+                                 <span class="glyphicon glyphicon-remove"></span> X
+                                 </a>
+                              </div>
+                           </div>
+                           {% endfor %}
+                        </div>
+                        <div class="row">
+                           <div class="col-lg-12 col-sm-12 col-12 text-center checkout">
+                              <button type="submit" class="btn btn-primary btn-block">SHOW CART</button>
+                           </div>
+                        </div>
+                     </div>
+                     {% else: %}
+                     <button type="button" class="btn btn-info" data-toggle="dropdown">
+                     <i class="fa fa-shopping-cart" aria-hidden="true"></i> Cart <span id ="btn-qua"class="badge badge-pill badge-danger">0</span>
+                     </button>
+                     <div class="dropdown-menu">
+                        <div id="begin" class="row total-header-section">
+                           <div class="col-lg-6 col-sm-6 col-6">
+                              <i class="fa fa-shopping-cart" aria-hidden="true"></i> <span id="drop-qua" class="badge badge-pill badge-danger">0</span>
+                           </div>
+                           <div class="col-lg-6 col-sm-6 col-6 total-section text-right">
+                              <p>Total: <span id="totalPrice" class="text-info">0 €</span></p>
+                           </div>
+                        </div>
+                        <div id="CartRows">
+                           <div class="no-records">Your Cart is Empty</div>
+                        </div>
+                        <div class="row">
+                           <div class="col-lg-12 col-sm-12 col-12 text-center checkout">
+                              <button type="submit" class="btn btn-primary btn-block">SHOW CART</button>
+                           </div>
+                        </div>
+                     </div>
+                     {% endif %}
+                  </form>
+               </div>
+            </div>
+         </nav>
+      </div>
+      <section class="our-publication pt-100 pb-70">
+         <div class="container">
+            <div class="section-header">
+               <i class="fa fa-book"></i>
+               <h2>Menu</h2>
+            </div>
+            <div class="row">
+               {% for product in products %}
+               <div class="col-sm-6 col-lg-3 items">
+                  <form method="post" action="/add">
+                     <div id='product-det' class="single-publication">
+                        <figure style="width:264px;">
+                           <a href="#">
+                           <img src="/static/images/product-images/{{ product.image }}" style="width: 150px; height: 200px;">
+                           </a>
+                           <ul >
+                              <li><a href="#" title="Quick View"><i class="fa fa-search"></i></a> </li>
+                           </ul>
+                        </figure>
+                        <div class="publication-content">
+                           <span hidden="true" class="category">{{ product.description }}</span>
+                           <h3><a href="#">{{ product.name }}</a></h3>
+                           <ul>
+                              <li><i class="icofont-star"></i></li>
+                              <li><i class="icofont-star"></i></li>
+                              <li><i class="icofont-star"></i></li>
+                              <li><i class="icofont-star"></i></li>
+                              <li><i class="icofont-star"></i></li>
+                           </ul>
+                           <h4 class="price"> {{ product.price }} €</h4>
+                        </div>
+                        <div class="add-to-cart">
+                           <input type="hidden" name="code" value="{{ product.code }}"/>
+                           <input type="number" id="{{ product.pid }}" class="product-quantity" name="quantity" value="1" min="1"  max="100" size="2"/>
+                           <input type="submit" size="2" value="Add to cart" class="default-btn" />
+                        </div>
+                     </div>
+                  </form>
+               </div>
+               {% endfor %}
+            </div>
+         </div>
+      </section>
+      <style>
+         #product-det{
+         height:400px;
+         }
+         .pt-100{
+         padding-top: 100px;
+         }
+         .pb-70{
+         padding-bottom: 70px;
+         }
+         .section-header {
+         margin-bottom: 60px;
+         text-align: center;
+         }
+         .section-header i{
+         color: #ff007d;
+         font-size: 50px;
+         display: inline-block;
+         margin-bottom: 10px;
+         }
+         .section-header h2{
+         font-weight: bold;
+         font-size: 34px;
+         margin: 0;
+         }
+         .section-header p{
+         max-width: 500px;
+         margin: 20px auto 0;
+         }
+         .single-publication {
+         border: 1px solid #f2eee2;
+         margin-bottom: 30px;
+         position: relative;
+         overflow: hidden;
+         }
+         .single-publication figure{
+         position: relative;
+         margin: 0;
+         text-align: center;
+         }
+         .single-publication figure > a{
+         background-color: #fafafa;
+         display: block;
+         }
+         #product-det figure ul{
+         list-style-type: none;
+         padding: 0;
+         margin: 0;
+         position: absolute;
+         right: -50px;
+         top:20px;
+         transition: .6s;
+         -webkit-transition: .6s;
+         }
+         #product-det:hover figure ul {
+         right: 15px;
+         }
+         #product-det figure ul li a {
+         display: inline-block;
+         width:35px;
+         height:35px;
+         text-align: center;
+         font-size: 15px;
+         background: #ff007d;
+         margin-bottom: 7px;
+         border-radius: 50%;
+         line-height: 35px;
+         color:#fff;
+         }
+         #product-det figure ul li a: hover{
+         color: #fff;
+         background: #e50663;
+         }
+         .single-publication .publication-content {
+         text-align: center;
+         padding: 20px;
+         }
+         .single-publication .publication-content .category {
+         display: inline-block;
+         font-family: 'Open Sans', sans-serif;
+         font-size: 14px;
+         color: #ff007d;
+         font-weight: 600;
+         }
+         .single-publication .publication-content h3 {
+         font-weight: 600;
+         margin: 8px 0 10px;
+         font-size: 20px;
+         }
+         .single-publication .publication-content h3 a {
+         color: #1f2d30;
+         }
+         #product-det .publication-content h3 a:hover {
+         color: #ff007d;
+         }
+         .single-publication .publication-content ul {
+         list-style-type: none;
+         padding: 0;
+         margin: 0;
+         margin-bottom: 15px;
+         }
+         .single-publication .publication-content ul li {
+         display: inline-block;
+         font-size: 18px;
+         color: #fec42d;
+         }
+         .single-publication .publication-content .price {
+         font-size: 18px;
+         color: #ff007d;
+         }
+         .single-publication .publication-content .price span {
+         color: #6f6f6f;
+         text-decoration: line-through;
+         padding-left: 5px;
+         font-weight: 300;
+         }
+         .single-publication .add-to-cart {
+         position: absolute;
+         right: 0;
+         bottom: 0;
+         left: 0;
+         background: #fff;
+         opacity: 0;
+         visibility: hidden;
+         text-align: center;
+         -webkit-transform: scale(.7);
+         transform: scale(.7);
+         height: 105px;
+         -moz-transition: .4s;
+         -webkit-transition: .4s;
+         transition: .4s;
+         }
+         #product-det:hover .add-to-cart {
+         visibility: visible;
+         transform: scale(1);
+         -webkit-transform: scale(1);
+         opacity: 1;
+         }
+         .single-publication .add-to-cart .default-btn {
+         margin-top: 28px;
+         padding: 8px 25px;
+         font-size: 14px;
+         }
+         .single-publication .category {
+         margin: 0;
+         }
+         .single-publication .add-to-cart .default-btn {
+         margin-top: 28px;
+         padding: 8px 25px;
+         font-size: 14px;
+         }
+         .default-btn {
+         background-color: #ff007d;
+         color: #fff;
+         border: 1px solid #ff007d;
+         display: inline-block;
+         padding: 10px 30px;
+         border-radius: 30px;
+         text-transform: uppercase;
+         font-weight: 600;
+         font-family: 'Open Sans', sans-serif;
+         }
+         .default-btn:hover {
+         color: #fff;
+         text-decoration: none;
+         }
+         /***** Navbar - Shopping cart  ****/
+         .main-section{
+         background-color: #F8F8F8;
+         margin-top:0px;
+         }
+         .dropdown{
+         float:right;
+         padding-right: 90px;
+         }
+         .btn{
+         border:0px;
+         margin:10px 0px;
+         box-shadow:none !important;
+         }
+         .dropdown .dropdown-menu{
+         padding:20px;
+         top:30px !important;
+         width:350px !important;
+         left:-110px !important;
+         box-shadow:0px 5px 30px black;
+         transform: translate3d(-152px, 46px, 0px);
+         }
+         .total-header-section{
+         border-bottom:1px solid #d2d2d2;
+         }
+         .total-section p{
+         margin-bottom:20px;
+         }
+         .cart-detail{
+         padding:15px 0px;
+         }
+         .cart-detail-img img{
+         width:100%;
+         height:100%;
+         padding-left:15px;
+         }
+         .cart-detail-product p{
+         margin:0px;
+         color:#000;
+         font-weight:500;
+         }
+         .cart-detail .price{
+         font-size:12px;
+         margin-right:10px;
+         font-weight:500;
+         }
+         .cart-detail .count{
+         color:#C2C2DC;
+         }
+         .checkout{
+         border-top:1px solid #d2d2d2;
+         padding-top: 15px;
+         }
+         .checkout .btn-primary{
+         border-radius:50px;
+         height:50px;
+         }
+         .dropdown-menu:before{
+         content: " ";
+         position:absolute;
+         top:-20px;
+         right:50px;
+         border:10px solid transparent;
+         border-bottom-color:#fff;
+         }
+         /*** scrollbar of Cart***/
+         #CartRows{
+         max-height:200px;
+         overflow-y:scroll;
+         overflow-x: hidden;
+         width:320px;
+         }
+      </style>
+      <script>
+         // jQuery
+         $(document).ready(function(){
+           $("#CartRow").scroll(function(){
+           });
+         });
+      </script>
+   </body>
+</html>
