@@ -119,6 +119,9 @@ def save_checkout():
                 cursor.execute(sqlInsert)
 
             session.clear()
+            conn.commit()
+            cursor.close()
+            conn.close()
             return render_template('cart.html', response="Your order has been received.")
         else:
             print("empty")
@@ -128,10 +131,6 @@ def save_checkout():
 
     except Exception as e:
         print(e)
-    finally:
-        conn.commit()
-        cursor.close()
-        conn.close()
 
 @app.route('/add', methods=['POST','GET'])
 def add_product_to_cart():
